@@ -36,7 +36,7 @@ jobs:
         run: >
           npm run build validate
           ${{ github.workspace }}/
-          /subscriptions/${{ secrets.AZURE_SUSCRIPTION_ID }}/resourceGroups/GR_DEV_PRIME/providers/Microsoft.DataFactory/factories/adfdevprime
+          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/GR_DEV_PRIME/providers/Microsoft.DataFactory/factories/adfdevprime
         working-directory: ${{ github.workspace }}/build
 
       # 5️⃣ Exporta ARM templates desde ADF DEV
@@ -44,7 +44,7 @@ jobs:
         run: >
           npm run build export
           ${{ github.workspace }}/
-          /subscriptions/${{ secrets.AZURE_SUSCRIPTION_ID }}/resourceGroups/GR_DEV_PRIME/providers/Microsoft.DataFactory/factories/adfdevprime
+          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/GR_DEV_PRIME/providers/Microsoft.DataFactory/factories/adfdevprime
           ExportedArmTemplate
         working-directory: ${{ github.workspace }}/build
 
@@ -71,7 +71,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUSCRIPTION_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: true
 
       # 9️⃣ Deploy del ARM hacia ADF PROD

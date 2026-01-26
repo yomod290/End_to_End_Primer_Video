@@ -1,0 +1,84 @@
+name: azure-adf-cicd-prime
+
+on:
+  push:
+    branches:
+      - main        # 🚀 Se ejecuta cuando haces merge/push a main (camino a PROD)
+
+  # Opcional: ejecución manual desde GitHub Actions
+  # workflow_dispatch:
+
+permissions:
+  id-token: write   # 🔐 Necesario para autenticación OIDC (credenciales federadas)
+  contents: read    # 📄 Permite leer el contenido del repo
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1️⃣ Trae el código del repositorio (ADF JSON + build/)
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Prepara Node.js para ejecutar las utilities de ADF
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+
+      # 3️⃣ Instala dependencias del build (azure-data-factory-utilities)
+      - name: Install ADF Utilities package
+        run: npm install
+        working-directory: ${{ github.workspace }}/build
+
+      # 4️⃣ Valida el ADF DEV (verifica JSON, pipelines, linked services, etc.)
+      - name: Validate ADF DEV resources
+        run: >
+          npm run build validate
+          ${{ github.workspace }}/
+          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/GR_DEV_PRIME/providers/Microsoft.DataFactory/factories/adfdevprime
+        working-directory: ${{ github.workspace }}/build
+
+      # 5️⃣ Exporta ARM templates desde ADF DEV
+      - name: Export ARM template from ADF DEV
+        run: >
+          npm run build export
+          ${{ github.workspace }}/
+          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/GR_DEV_PRIME/providers/Microsoft.DataFactory/factories/adfdevprime
+          ExportedArmTemplate
+        working-directory: ${{ github.workspace }}/build
+
+      # 6️⃣ Publica los ARM templates como artifact para el job de release
+      - name: Upload ARM template artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExportedArmTemplate
+          path: ${{ github.workspace }}/build/ExportedArmTemplate
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # 7️⃣ Descarga el artifact generado en el job build
+      - name: Download ARM template artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ExportedArmTemplate
+
+      # 8️⃣ Login a Azure usando OIDC (App Registration + credenciales federadas)
+      - name: Azure login (OIDC)
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+
+      # 9️⃣ Deploy del ARM hacia ADF PROD
+      - name: Deploy ARM to ADF PROD
+        uses: Azure/data-factory-deploy-action@v1.2.0
+        with:
+          resourceGroupName: GR_PROD_PRIME
+          dataFactoryName: adfprodprime
+          armTemplateFile: ARMTemplateForFactory.json
+          armTemplateParametersFile: ARMTemplateParametersForFactory.json

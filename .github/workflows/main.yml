@@ -82,3 +82,10 @@ jobs:
           dataFactoryName: adfprodprime
           armTemplateFile: ARMTemplateForFactory.json
           armTemplateParametersFile: ARMTemplateParametersForFactory.json
+
+          # ✅ OVERRIDES para PROD (lo que en DEV apunta a DEV, acá se reemplaza a PROD)
+          additionalParameters: >
+            factoryName=adfprodprime
+            LS_adsl_prime_sink_DEV_properties_typeProperties_url=https://adlsprodprime.dfs.core.windows.net/
+            LS_adsl_prime_sink_DEV_accountKey=${{ secrets.ADLS_PROD_ACCOUNT_KEY }}
+

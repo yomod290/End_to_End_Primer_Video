@@ -1,1 +1,60 @@
+name: databricks-cicd-prime
+
+on:
+  push:
+    branches:
+      - main   # cuando haces merge a main -> actualiza DEV y luego PROD
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+
+      # ✅ PON AQUÍ LA RUTA REAL DE TU GIT FOLDER EN DATABRICKS DEV
+      # Ejemplo: /Repos/yd.montenegro.martinez@gmail.com/DEV-DATABRIKS-GIT-FOLDER
+      REPO_PATH: /Repos/yd.montenegro.martinez@gmail.com/DEV-DATABRIKS-GIT-FOLDER
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Instala Databricks CLI (v2) en el runner de GitHub (NO en tu PC)
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+          databricks version
+
+      # Actualiza el repo dentro de Databricks DEV para que haga "pull" de main
+      - name: Update Databricks Repo (DEV) to main
+        run: |
+          databricks repos update "$REPO_PATH" --branch "main"
+
+  deploy-prod:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
+
+      # ✅ PON AQUÍ LA RUTA REAL DE TU GIT FOLDER EN DATABRICKS PROD
+      # Ejemplo: /Repos/yd.montenegro.martinez@gmail.com/PROD-DATABRIKS-GIT-FOLDER
+      REPO_PATH: /Repos/yd.montenegro.martinez@gmail.com/PROD-DATABRIKS-GIT-FOLDER
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+          databricks version
+
+      - name: Update Databricks Repo (PROD) to main
+        run: |
+          databricks repos update "$REPO_PATH" --branch "main"
 

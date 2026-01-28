@@ -4,7 +4,7 @@
 		"activities": [
 			{
 				"name": "Copy_Dataset",
-				"description": "",
+				"description": "Copiar los datos de Github a ADSL",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {

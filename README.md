@@ -185,7 +185,6 @@ Integración completa entre Data Engineering y BI
 
 👤 Autor
 Yonathan Montenegro Martínez
-Data Engineer | Analytics Engineer
 
 ---
 
